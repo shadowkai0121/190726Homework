@@ -27,17 +27,30 @@ Player.prototype = {
         switch (this.direction) {
             case "right":
                 this.x += this.dx;
+                if (this.x >= canvas.width - this.avatarImg.width) {
+                    this.x = canvas.width - this.avatarImg.width;
+                }
                 break;
             case "left":
                 this.x -= this.dx;
+                if (this.x <= 0) {
+                    this.x = 0;
+                }
                 break;
             case "top":
                 this.y -= this.dy;
+                if (this.y <= 0) {
+                    this.y = 0;
+                }
                 break;
             case "bottom":
                 this.y += this.dy;
+                if (this.y >= canvas.height - this.avatarImg.height) {
+                    this.y = canvas.height - this.avatarImg.height;
+                }
                 break;
         }
+
     },
 }
 
@@ -135,7 +148,6 @@ document.onkeyup = function (e) {
 }
 
 function start() {
-    console.log("start clicked");
     update();
     main();
 }
