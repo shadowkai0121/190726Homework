@@ -11,12 +11,11 @@ canvas.width = 640;
 canvas.height = 480;
 
 let ctx = canvas.getContext('2d'),
-    fps = 1000 / 60,
     direction = ["bottom", "left", "right", "top"];
 
 function Player() {
-    this.x = 0;
-    this.y = 0;
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
     this.dx = 4;
     this.dy = 4;
     this.direction = "right";
@@ -51,11 +50,6 @@ let Draw = {
         width: 32,
         height: 32
     },
-    setImg: function (render) {
-        this.img.onload = function () {
-            render(this);
-        }
-    },
     draw: function () {
         // 取得人物對應的面向
         this.avatarImg.y = 32 * direction.indexOf(this.direction);
@@ -68,23 +62,25 @@ let Draw = {
             this.avatarImg.width, this.avatarImg.height);
     },
     // 人物動作
+    actionFrame: 32,
     action: function (obj) {
-        obj.avatarImg.x += 32;
+        obj.avatarImg.x += obj.actionFrame;
 
-        if (obj.avatarImg.x >= obj.avatarImg.width * 3) {
-            obj.avatarImg.x = 0;
+        if (obj.avatarImg.x >= obj.avatarImg.width * 2 || obj.avatarImg.x <= 0) {
+            obj.actionFrame *= -1;
         }
 
-        setTimeout(obj.action, fps * 25, obj);
+        setTimeout(obj.action, 1000 / 3, obj);
     }
 }
 
 function Warrior() {
     Player.call(this);
+    this.x = 50
+    this.y = canvas.height / 2;
     this.name = "Warrior";
     this.img = new Image();
     this.img.src = "img/warrior.png";
-    this.setImg(update);
     this.action(this);
 }
 
@@ -103,16 +99,26 @@ bgImg.onload = function () {
 }
 
 
+// 產生玩家物件
 let player = new Warrior();
 
+let mainReq = [];
+// 畫面更新
 function update() {
     if (bgReady) {
         reset()
         ctx.drawImage(bgImg, 0, 0);
         player.draw();
     }
+
+    mainReq["update"] = requestAnimationFrame(update);
 }
-setInterval(update, fps);
+update();
+
+function reset() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 
 // 使用者功能
 let keysdown = [];
@@ -130,14 +136,20 @@ document.onkeyup = function (e) {
 
 function start() {
     console.log("start clicked");
+    update();
+    main();
 }
 
 function pause() {
-    console.log("pause clicked");
+    for (let request in mainReq) {
+        cancelAnimationFrame(mainReq[request]);
+    }
 }
 
-function reset() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function userReset() {
+    pause();
+    reset();
+    ctx.drawImage(bgImg, 0, 0);
 }
 
 function main() {
@@ -158,7 +170,6 @@ function main() {
         player.move();
     }
 
-    requestAnimationFrame(main);
+    mainReq["main"] = requestAnimationFrame(main);
 }
-
 main();
