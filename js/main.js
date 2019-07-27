@@ -11,7 +11,8 @@ canvas.width = 640;
 canvas.height = 480;
 
 let ctx = canvas.getContext('2d'),
-    fps = 1000 / 60;
+    fps = 1000 / 60,
+    direction = ["bottom", "left", "right", "top"];
 
 function Player() {
     this.x = 0;
@@ -44,7 +45,7 @@ Player.prototype = {
 // draw interface
 let Draw = {
     // 人物大小 32*32
-    avatarSize: {
+    avatarImg: {
         x: 0,
         y: 0,
         width: 32,
@@ -56,13 +57,25 @@ let Draw = {
         }
     },
     draw: function () {
+        // 取得人物對應的面向
+        this.avatarImg.y = 32 * direction.indexOf(this.direction);
         ctx.drawImage(this.img,
             // 人物擷取範圍
-            this.avatarSize.x, this.avatarSize.y, this.avatarSize.width, this.avatarSize.height,
+            this.avatarImg.x, this.avatarImg.y, this.avatarImg.width, this.avatarImg.height,
             // 人物在地圖的位置
             this.x, this.y,
             // 人物在地圖的大小
-            this.avatarSize.width, this.avatarSize.height);
+            this.avatarImg.width, this.avatarImg.height);
+    },
+    // 人物動作
+    action: function (obj) {
+        obj.avatarImg.x += 32;
+
+        if (obj.avatarImg.x >= obj.avatarImg.width * 3) {
+            obj.avatarImg.x = 0;
+        }
+
+        setTimeout(obj.action, fps * 25, obj);
     }
 }
 
@@ -72,6 +85,7 @@ function Warrior() {
     this.img = new Image();
     this.img.src = "img/warrior.png";
     this.setImg(update);
+    this.action(this);
 }
 
 // warrior extends palyer
