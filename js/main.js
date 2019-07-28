@@ -155,6 +155,7 @@ Object.assign(Warrior.prototype, clone(new Draw()));
 Warrior.prototype.piercing = function () {
     let piercing = new Piercing(this.x, this.y, this.direction);
     piercing.specialEffect(piercing);
+    piercing.isHit();
     // 物件存入清單內管理
     skillObj.push(piercing);
 }
@@ -176,26 +177,29 @@ function Piercing(x, y, direct) {
         case "left":
             this.x = x - this.avatarImg.width * this.scale;
             this.y = y - this.avatarImg.height * this.scale / 2 + 16;
+
             this.scope = {
-                minX: x,
+                minX: x - this.avatarImg.width * this.scale,
                 minY: y,
-                maxX: x - this.avatarImg.width * this.scale,
+                maxX: x,
                 maxY: y + 32
             }
             break;
         case "top":
             this.x = x - this.avatarImg.width * this.scale / 2 + 16;
             this.y = y - this.avatarImg.height * this.scale;
+
             this.scope = {
                 minX: x,
-                minY: y,
+                minY: y - this.avatarImg.height * this.scale,
                 maxX: x + 32,
-                maxY: y - this.avatarImg.height * this.scale
+                maxY: y,
             }
             break;
         case "bottom":
             this.x = x - this.avatarImg.width * this.scale / 2 + 16;
             this.y = y + 32;
+
             this.scope = {
                 minX: x,
                 minY: y + 32,
@@ -204,6 +208,7 @@ function Piercing(x, y, direct) {
             }
             break;
     }
+
     // 存活標記
     this.isDelete = false;
     this.direction = direct;
@@ -212,6 +217,53 @@ function Piercing(x, y, direct) {
     this.img.src = "img/piercing_" + direct + ".png";
     this.health = 0;
     this.specialEffect(this);
+}
+
+Piercing.prototype = {
+    // 命中判斷
+    isHit: function () {
+        let result;
+
+        // 取得場上的玩家物件
+        for (let person of playerObj) {
+            result = false;
+            // 判斷範圍有沒有重疊
+            switch (this.direction) {
+                case "right":
+                    if (this.scope.maxX >= person.scope.minX &&
+                        this.scope.minY >= person.scope.minY ||
+                        this.scope.maxY >= person.scope.maxY) {
+                        result = true;
+                    }
+                    break;
+                case "left":
+                    if (this.scope.minX <= person.scope.minX &&
+                        this.scope.minY >= person.scope.minY ||
+                        this.scope.maxY >= person.scope.maxY) {
+                        result = true;
+                    }
+                    break;
+                case "top":
+                    if (this.scope.minY <= person.scope.minY &&
+                        this.scope.minX >= person.scope.minX ||
+                        this.scope.maxX >= person.scope.maxX) {
+                        result = true;
+                    }
+                    break;
+                case "bottom":
+                    if (this.scope.maxY >= person.scope.maxY &&
+                        this.scope.minX >= person.scope.minX ||
+                        this.scope.maxX >= person.scope.maxX) {
+                        result = true;
+                    }
+                    break;
+            }
+
+            if (result) {
+                console.log("Hit from " + this.direction);
+            }
+        }
+    }
 }
 
 Object.assign(Piercing.prototype, clone(new Draw(0.5, 320, 240)));
@@ -241,12 +293,14 @@ bgImg.onload = function () {
     bgReady = true;
 }
 
-// 蒐集技能物件
-let skillObj = [];
+// 蒐集技能 & 玩家物件
+let skillObj = [],
+    playerObj = []
 // 產生玩家物件
 let player = new Warrior();
 // 磚塊
 let brick = new Brick();
+playerObj.push(brick);
 
 // 儲存畫面更新的物件
 let mainReq = {};
@@ -258,16 +312,6 @@ function update() {
         player.draw();
         brick.show();
         for (let o of skillObj) {
-            // 移除執行完成的物件
-            if (o.isDelete) {
-                skillObj = skillObj.filter((item) => {
-                    return item != o;
-                });
-                continue;
-            }
-            if (o.scope.maxX >= brick.x) {
-                console.log(o.direction + ": hit");
-            }
             o.show();
         }
     }
@@ -318,6 +362,15 @@ function casting() {
         player.piercing();
     }
 
+    // 清除物件
+    for (let o of skillObj) {
+        if (o.isDelete) {
+            skillObj = skillObj.filter((item) => {
+                return item != o;
+            });
+            continue;
+        }
+    }
 
     mainReq.casting = setTimeout(casting, 1000 / 8);
 }
