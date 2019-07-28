@@ -46,25 +46,41 @@ Player.prototype = {
                 this.x += this.dx;
                 if (this.x >= canvas.width - this.avatarImg.width) {
                     this.x = canvas.width - this.avatarImg.width;
+                    if (this instanceof Brick) {
+                        this.direction = direction[parseInt(Math.random() * 4)];
+                    }
                 }
+
                 break;
             case "left":
                 this.x -= this.dx;
                 if (this.x <= 0) {
                     this.x = 0;
+                    if (this instanceof Brick) {
+                        this.direction = direction[parseInt(Math.random() * 4)];
+                    }
                 }
+
                 break;
             case "top":
                 this.y -= this.dy;
                 if (this.y <= 0) {
                     this.y = 0;
+                    if (this instanceof Brick) {
+                        this.direction = direction[parseInt(Math.random() * 4)];
+                    }
                 }
+
                 break;
             case "bottom":
                 this.y += this.dy;
                 if (this.y >= canvas.height - this.avatarImg.height) {
                     this.y = canvas.height - this.avatarImg.height;
+                    if (this instanceof Brick) {
+                        this.direction = direction[parseInt(Math.random() * 4)];
+                    }
                 }
+
                 break;
         }
 
@@ -292,6 +308,7 @@ Piercing.prototype = {
 Object.assign(Piercing.prototype, clone(new Draw(0.5, 320, 240)));
 
 function Brick() {
+    Player.call(this);
     this.x = canvas.width / 2 - 16;
     this.y = canvas.height / 2 - 16;
     this.name = "Boss";
@@ -304,6 +321,8 @@ function Brick() {
         maxY: this.y + this.avatarImg.height
     }
 }
+
+Brick.prototype = Object.create(Player.prototype);
 
 Object.assign(Brick.prototype, clone(new Draw()));
 
@@ -419,6 +438,7 @@ function casting() {
         }
     }
 
+    brick.move();
     mainReq.casting = setTimeout(casting, 1000 / 8);
 }
 casting();
