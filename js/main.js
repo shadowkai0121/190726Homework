@@ -151,20 +151,18 @@ Warrior.prototype = Object.create(Player.prototype);
 Object.assign(Warrior.prototype, clone(new Draw));
 
 Warrior.prototype.piercing = function () {
-    console.log(this.direction);
     if (skillObj.length > 0) {
         return;
     }
     let piercing = new Piercing(this.x, this.y, this.direction);
     piercing.specialEffect(piercing);
     skillObj.push(piercing);
-    setTimeout(() => {
-        piercing = undefined;
-    }, 1000 / 5);
+    console.log(piercing);
 }
 
 function Piercing(x, y, direct) {
     Player.call(this);
+    console.log(direct);
     switch (direct) {
         case "right":
             this.x = x + 32;
@@ -173,6 +171,13 @@ function Piercing(x, y, direct) {
         case "left":
             this.x = x - 320;
             this.y = y - this.avatarImg.height / 2 + 16;
+            break;
+        case "top":
+            this.x = x - this.avatarImg.width / 2 + 16;
+            this.y = y - this.avatarImg.height;
+            break;
+        case "bottome":
+
             break;
     }
     this.direction = direct;
@@ -234,7 +239,6 @@ document.onkeydown = function (e) {
         e.preventDefault();
     }
     keysdown[e.keyCode] = true;
-    console.log("keydown with " + e.keyCode);
 }
 
 document.onkeyup = function (e) {
