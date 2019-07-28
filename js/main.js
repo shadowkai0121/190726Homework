@@ -167,40 +167,40 @@ function Piercing(x, y, direct) {
             this.y = y - this.avatarImg.height * this.scale / 2 + 16;
             // 作用範圍
             this.scope = {
-                x: x + 32,
-                y: y,
-                width: 320,
-                height: 32
+                minX: x + 32,
+                minY: y,
+                maxX: this.x + this.avatarImg.width * this.scale,
+                maxY: y + 32
             }
             break;
         case "left":
             this.x = x - this.avatarImg.width * this.scale;
             this.y = y - this.avatarImg.height * this.scale / 2 + 16;
             this.scope = {
-                x: x,
-                y: y,
-                width: -320,
-                height: 32
+                minX: x,
+                minY: y,
+                maxX: x - this.avatarImg.width * this.scale,
+                maxY: y + 32
             }
             break;
         case "top":
             this.x = x - this.avatarImg.width * this.scale / 2 + 16;
             this.y = y - this.avatarImg.height * this.scale;
             this.scope = {
-                x: x,
-                y: y,
-                width: 32,
-                height: -320
+                minX: x,
+                minY: y,
+                maxX: x + 32,
+                maxY: y - this.avatarImg.height * this.scale
             }
             break;
         case "bottom":
             this.x = x - this.avatarImg.width * this.scale / 2 + 16;
             this.y = y + 32;
             this.scope = {
-                x: x,
-                y: y + 32,
-                width: 32,
-                height: 320
+                minX: x,
+                minY: y + 32,
+                maxX: x + 32,
+                maxY: this.minY + this.height * this.scale
             }
             break;
     }
@@ -222,6 +222,12 @@ function Brick() {
     this.name = "Boss";
     this.img = new Image();
     this.img.src = "img/brick_boss.png";
+    this.scope = {
+        minX: this.x,
+        minY: this.y,
+        maxX: this.x + this.avatarImg.width,
+        maxY: this.y + this.avatarImg.health
+    }
 }
 
 Object.assign(Brick.prototype, clone(new Draw()));
@@ -258,6 +264,9 @@ function update() {
                     return item != o;
                 });
                 continue;
+            }
+            if (o.scope.maxX >= brick.x) {
+                console.log(o.direction + ": hit");
             }
             o.show();
         }
