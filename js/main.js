@@ -84,7 +84,6 @@ function Draw(scale = 1, width = 32, height = 32) {
     }
     // 動作圖移動距離
     this.actionX = width;
-    this.actionY = height;
 }
 
 Draw.prototype = {
@@ -222,46 +221,70 @@ function Piercing(x, y, direct) {
 Piercing.prototype = {
     // 命中判斷
     isHit: function () {
-        let result;
-
         // 取得場上的玩家物件
         for (let person of playerObj) {
-            result = false;
             // 判斷範圍有沒有重疊
             switch (this.direction) {
                 case "right":
                     if (this.scope.maxX >= person.scope.minX &&
-                        this.scope.minY >= person.scope.minY ||
-                        this.scope.maxY >= person.scope.maxY) {
-                        result = true;
+                        this.scope.minY >= person.scope.maxY ||
+                        this.scope.maxY >= person.scope.minY) {
+
+                        let horizontal = this.scope.minY >= person.scope.maxY ?
+                            (this.scope.minY + person.scope.maxY) / 2 :
+                            (this.scope.maxY + person.scope.minY) / 2;
+
+                        // 在命中角色的左邊與和技能與角色重疊的 Y 軸中線產生爆炸
+                        let explosion = new Explosion(person.x, horizontal);
+                        explosion.action(explosion);
+                        skillObj.push(explosion);
                     }
                     break;
                 case "left":
                     if (this.scope.minX <= person.scope.minX &&
-                        this.scope.minY >= person.scope.minY ||
-                        this.scope.maxY >= person.scope.maxY) {
-                        result = true;
+                        this.scope.minY >= person.scope.maxY ||
+                        this.scope.maxY >= person.scope.minY) {
+
+                        let horizontal = this.scope.minY >= person.scope.maxY ?
+                            (this.scope.minY + person.scope.maxY) / 2 :
+                            (this.scope.maxY + person.scope.minY) / 2;
+
+                        let explosion = new Explosion(person.x + 32, horizontal);
+                        explosion.action(explosion);
+                        skillObj.push(explosion);
                     }
                     break;
                 case "top":
                     if (this.scope.minY <= person.scope.minY &&
-                        this.scope.minX >= person.scope.minX ||
-                        this.scope.maxX >= person.scope.maxX) {
-                        result = true;
+                        this.scope.minX <= person.scope.maxX ||
+                        this.scope.maxX >= person.scope.minX) {
+
+
+                        let vertical = this.scope.minX <= person.scope.maxX ?
+                            (this.scope.minX + person.scope.maxX) / 2 :
+                            (this.scope.maxX + person.scope.minX) / 2;
+
+                        let explosion = new Explosion(vertical, person.scope.maxY);
+                        explosion.action(explosion);
+                        skillObj.push(explosion);
                     }
                     break;
                 case "bottom":
                     if (this.scope.maxY >= person.scope.maxY &&
-                        this.scope.minX >= person.scope.minX ||
-                        this.scope.maxX >= person.scope.maxX) {
-                        result = true;
+                        this.scope.minX <= person.scope.maxX ||
+                        this.scope.maxX >= person.scope.minX) {
+
+                        let vertical = this.scope.minX <= person.scope.maxX ?
+                            (this.scope.minX + person.scope.maxX) / 2 :
+                            (this.scope.maxX + person.scope.minX) / 2;
+
+                        let explosion = new Explosion(vertical, person.scope.minY);
+                        explosion.action(explosion);
+                        skillObj.push(explosion);
                     }
                     break;
             }
 
-            if (result) {
-                console.log("Hit from " + this.direction);
-            }
         }
     }
 }
@@ -278,11 +301,35 @@ function Brick() {
         minX: this.x,
         minY: this.y,
         maxX: this.x + this.avatarImg.width,
-        maxY: this.y + this.avatarImg.health
+        maxY: this.y + this.avatarImg.height
     }
 }
 
 Object.assign(Brick.prototype, clone(new Draw()));
+
+function Explosion(x, y) {
+    this.name = "explosion";
+    this.x = x - 16;
+    this.y = y - 16;
+    this.img = new Image();
+    this.img.src = "img/explosion.png";
+    this.health = 0;
+    this.isDelete = false;
+
+}
+
+Explosion.prototype = clone(new Draw(0.2666, 120, 120));
+
+Explosion.prototype.action = function (obj) {
+    obj.avatarImg.x = obj.avatarImg.width * obj.health;
+    obj.health++;
+    if (obj.health >= 8) {
+        obj.isDelete = true;
+        return;
+    }
+
+    setTimeout(obj.action, 1000 / 10, obj);
+}
 
 // 背景圖片
 let bgReady = false,
