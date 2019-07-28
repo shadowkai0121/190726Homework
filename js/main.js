@@ -118,7 +118,7 @@ Draw.prototype = {
     specialEffect: function (obj) {
         let col = obj.health % 3,
             row = Math.floor(obj.health / 3),
-            timeout = 1000 / 10;
+            timeout = 1000 / 40;
 
         obj.avatarImg.x = obj.avatarImg.width * col;
         obj.avatarImg.y = obj.avatarImg.height * row;
@@ -151,36 +151,35 @@ Warrior.prototype = Object.create(Player.prototype);
 Object.assign(Warrior.prototype, clone(new Draw));
 
 Warrior.prototype.piercing = function () {
-    if (skillObj.length > 0) {
-        return;
-    }
     let piercing = new Piercing(this.x, this.y, this.direction);
     piercing.specialEffect(piercing);
     skillObj.push(piercing);
-    console.log(piercing);
 }
 
 function Piercing(x, y, direct) {
     Player.call(this);
-    console.log(direct);
+    console.log(`Piercing(x, y, direct) = ${x}, ${y}, ${direct}`);
     switch (direct) {
         case "right":
             this.x = x + 32;
-            this.y = y - this.avatarImg.height / 2 + 16;
+            this.y = y - this.avatarImg.height * this.scale / 2 + 16;
             break;
         case "left":
-            this.x = x - 320;
-            this.y = y - this.avatarImg.height / 2 + 16;
+            this.x = x - this.avatarImg.width * this.scale;
+            this.y = y - this.avatarImg.height * this.scale / 2 + 16;
             break;
         case "top":
-            this.x = x - this.avatarImg.width / 2 + 16;
-            this.y = y - this.avatarImg.height;
+            this.x = x - this.avatarImg.width * this.scale / 2 + 16;
+            this.y = y - this.avatarImg.height * this.scale;
             break;
-        case "bottome":
-
+        case "bottom":
+            this.x = x - this.avatarImg.width * this.scale / 2 + 16;
+            this.y = y + 32;
             break;
     }
     this.direction = direct;
+    this.dx = 0;
+    this.dy = 0;
     this.img = new Image();
     this.img.src = "img/piercing_" + direct + ".png";
     this.health = 0;
@@ -189,7 +188,7 @@ function Piercing(x, y, direct) {
 
 Piercing.prototype = Object.create(Player.prototype);
 
-Object.assign(Piercing.prototype, clone(new Draw(1, 320, 240)));
+Object.assign(Piercing.prototype, clone(new Draw(0.5, 320, 240)));
 
 // 背景圖片
 let bgReady = false,
@@ -262,6 +261,21 @@ function userReset() {
     ctx.drawImage(bgImg, 0, 0);
 }
 
+function casting() {
+
+    if (90 in keysdown) {
+        player.piercing();
+    }
+
+
+    mainReq.casting = setTimeout(casting, 1000 / 8);
+    return function () {
+        clearTimeout(this);
+    }
+}
+casting();
+
+
 function main() {
     if (37 in keysdown) {
         player.direction = "left";
@@ -279,11 +293,7 @@ function main() {
         player.direction = "bottom";
         player.move();
     }
-    if (90 in keysdown) {
-        player.piercing();
-    }
 
     mainReq.main = requestAnimationFrame(main);
 }
 main();
-console.log("Logging success");
