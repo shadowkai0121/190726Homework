@@ -7,6 +7,23 @@
         設置敵人
 */
 
+// 複製物件
+function clone(source) {
+    if (source == null || typeof (source) != 'object') return null;
+
+    let target = new Object();
+    for (let attr in source) {
+        if (typeof (source[attr]) != 'object') {
+            target[attr] = source[attr];
+        } else {
+            target[attr] = clone(source[attr]);
+        }
+    }
+
+    return target;
+}
+
+
 canvas.width = 640;
 canvas.height = 480;
 
@@ -18,7 +35,7 @@ function Player() {
     this.y = Math.random() * canvas.height;
     this.dx = 4;
     this.dy = 4;
-    this.direction = "right";
+    this.direction = direction[parseInt(Math.random() * 4)];
     this.heath = 100;
 }
 
@@ -54,36 +71,68 @@ Player.prototype = {
     },
 }
 
-// draw interface
-let Draw = {
+// 繪圖功能
+function Draw(scale = 1, width = 32, height = 32) {
+    // 圖片縮放比例
+    this.scale = scale;
     // 人物大小 32*32
-    avatarImg: {
+    this.avatarImg = {
         x: 0,
         y: 0,
-        width: 32,
-        height: 32
-    },
+        width: width,
+        height: height,
+    }
+    // 動作圖移動距離
+    this.actionX = width;
+    this.actionY = height;
+}
+Draw.prototype = {
     draw: function () {
         // 取得人物對應的面向
-        this.avatarImg.y = 32 * direction.indexOf(this.direction);
+        this.avatarImg.y = this.avatarImg.width * direction.indexOf(this.direction);
         ctx.drawImage(this.img,
             // 人物擷取範圍
-            this.avatarImg.x, this.avatarImg.y, this.avatarImg.width, this.avatarImg.height,
+            this.avatarImg.x, this.avatarImg.y,
+            this.avatarImg.width, this.avatarImg.height,
             // 人物在地圖的位置
             this.x, this.y,
             // 人物在地圖的大小
-            this.avatarImg.width, this.avatarImg.height);
+            this.avatarImg.width * this.scale, this.avatarImg.height * this.scale);
     },
-    // 人物動作
-    actionFrame: 32,
     action: function (obj) {
-        obj.avatarImg.x += obj.actionFrame;
+        obj.avatarImg.x += obj.actionX;
 
         if (obj.avatarImg.x >= obj.avatarImg.width * 2 || obj.avatarImg.x <= 0) {
-            obj.actionFrame *= -1;
+            obj.actionX *= -1;
         }
 
         setTimeout(obj.action, 1000 / 3, obj);
+    },
+    show: function () {
+        ctx.drawImage(this.img,
+            this.avatarImg.x, this.avatarImg.y,
+            this.avatarImg.width, this.avatarImg.height,
+            this.x, this.y,
+            this.avatarImg.width * this.scale, this.avatarImg.height * this.scale);
+    },
+    specialEffect: function (obj) {
+        let col = obj.health % 3,
+            row = Math.floor(obj.health / 3),
+            timeout = 1000 / 40;
+
+        obj.avatarImg.x = obj.avatarImg.width * col;
+        obj.avatarImg.y = obj.avatarImg.height * row;
+
+        obj.health++;
+        if (obj.health > 9) {
+            obj.isDelete = true;
+            return;
+        }
+
+        if (row == 1) {
+            timeout = 1000 / 60;
+        }
+        setTimeout(obj.specialEffect, timeout, obj);
     }
 }
 
@@ -97,10 +146,49 @@ function Warrior() {
     this.action(this);
 }
 
-// warrior extends palyer
 Warrior.prototype = Object.create(Player.prototype);
-// 實作 draw
-Object.assign(Warrior.prototype, Draw);
+
+Object.assign(Warrior.prototype, clone(new Draw));
+
+Warrior.prototype.piercing = function () {
+    let piercing = new Piercing(this.x, this.y, this.direction);
+    piercing.specialEffect(piercing);
+    skillObj.push(piercing);
+}
+
+function Piercing(x, y, direct) {
+    Player.call(this);
+    console.log(`Piercing(x, y, direct) = ${x}, ${y}, ${direct}`);
+    switch (direct) {
+        case "right":
+            this.x = x + 32;
+            this.y = y - this.avatarImg.height * this.scale / 2 + 16;
+            break;
+        case "left":
+            this.x = x - this.avatarImg.width * this.scale;
+            this.y = y - this.avatarImg.height * this.scale / 2 + 16;
+            break;
+        case "top":
+            this.x = x - this.avatarImg.width * this.scale / 2 + 16;
+            this.y = y - this.avatarImg.height * this.scale;
+            break;
+        case "bottom":
+            this.x = x - this.avatarImg.width * this.scale / 2 + 16;
+            this.y = y + 32;
+            break;
+    }
+    this.direction = direct;
+    this.dx = 0;
+    this.dy = 0;
+    this.img = new Image();
+    this.img.src = "img/piercing_" + direct + ".png";
+    this.health = 0;
+    this.specialEffect(this);
+}
+
+Piercing.prototype = Object.create(Player.prototype);
+
+Object.assign(Piercing.prototype, clone(new Draw(0.5, 320, 240)));
 
 // 背景圖片
 let bgReady = false,
@@ -111,20 +199,30 @@ bgImg.onload = function () {
     bgReady = true;
 }
 
-
 // 產生玩家物件
+let skillObj = [];
 let player = new Warrior();
 
-let mainReq = [];
+// 儲存畫面更新的物件
+let mainReq = {};
 // 畫面更新
 function update() {
     if (bgReady) {
         reset()
         ctx.drawImage(bgImg, 0, 0);
         player.draw();
+        for (let o of skillObj) {
+            if (o.isDelete) {
+                skillObj = skillObj.filter((item) => {
+                    return item != o;
+                });
+                continue;
+            }
+            o.show();
+        }
     }
 
-    mainReq["update"] = requestAnimationFrame(update);
+    mainReq.update = requestAnimationFrame(update);
 }
 update();
 
@@ -140,7 +238,6 @@ document.onkeydown = function (e) {
         e.preventDefault();
     }
     keysdown[e.keyCode] = true;
-    console.log("keydown with " + e.keyCode);
 }
 
 document.onkeyup = function (e) {
@@ -164,6 +261,21 @@ function userReset() {
     ctx.drawImage(bgImg, 0, 0);
 }
 
+function casting() {
+
+    if (90 in keysdown) {
+        player.piercing();
+    }
+
+
+    mainReq.casting = setTimeout(casting, 1000 / 8);
+    return function () {
+        clearTimeout(this);
+    }
+}
+casting();
+
+
 function main() {
     if (37 in keysdown) {
         player.direction = "left";
@@ -182,6 +294,6 @@ function main() {
         player.move();
     }
 
-    mainReq["main"] = requestAnimationFrame(main);
+    mainReq.main = requestAnimationFrame(main);
 }
 main();
