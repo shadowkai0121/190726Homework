@@ -1,7 +1,5 @@
 /*
     todo:
-        特效測試
-        玩家物件
         攻擊功能 (反彈)
         設置磚塊
         設置敵人
@@ -30,6 +28,7 @@ canvas.height = 480;
 let ctx = canvas.getContext('2d'),
     direction = ["bottom", "left", "right", "top"];
 
+// 玩家類別
 function Player() {
     this.x = Math.random() * canvas.width;
     this.y = Math.random() * canvas.height;
@@ -40,6 +39,7 @@ function Player() {
 }
 
 Player.prototype = {
+    // 物件移動的方法
     move: function () {
         switch (this.direction) {
             case "right":
@@ -73,7 +73,7 @@ Player.prototype = {
 
 // 繪圖功能
 function Draw(scale = 1, width = 32, height = 32) {
-    // 圖片縮放比例
+    // 繪圖縮放比例
     this.scale = scale;
     // 人物大小 32*32
     this.avatarImg = {
@@ -86,19 +86,14 @@ function Draw(scale = 1, width = 32, height = 32) {
     this.actionX = width;
     this.actionY = height;
 }
+
 Draw.prototype = {
     draw: function () {
         // 取得人物對應的面向
         this.avatarImg.y = this.avatarImg.width * direction.indexOf(this.direction);
-        ctx.drawImage(this.img,
-            // 人物擷取範圍
-            this.avatarImg.x, this.avatarImg.y,
-            this.avatarImg.width, this.avatarImg.height,
-            // 人物在地圖的位置
-            this.x, this.y,
-            // 人物在地圖的大小
-            this.avatarImg.width * this.scale, this.avatarImg.height * this.scale);
+        this.show();
     },
+    // 人物動作動畫
     action: function (obj) {
         obj.avatarImg.x += obj.actionX;
 
@@ -110,32 +105,38 @@ Draw.prototype = {
     },
     show: function () {
         ctx.drawImage(this.img,
+            // 人物擷取範圍
             this.avatarImg.x, this.avatarImg.y,
             this.avatarImg.width, this.avatarImg.height,
+            // 人物在地圖的位置
             this.x, this.y,
+            // 人物在地圖的大小
             this.avatarImg.width * this.scale, this.avatarImg.height * this.scale);
     },
+    // 顯示一次特效
     specialEffect: function (obj) {
+        // 取得下一張圖位置
         let col = obj.health % 3,
             row = Math.floor(obj.health / 3),
-            timeout = 1000 / 40;
+            timeout = 1000 / 60;
 
+        // 動態調整裁切範圍
         obj.avatarImg.x = obj.avatarImg.width * col;
         obj.avatarImg.y = obj.avatarImg.height * row;
 
+        // 計算目前執行次數
         obj.health++;
         if (obj.health > 9) {
+            // 標記執行完成
             obj.isDelete = true;
             return;
         }
 
-        if (row == 1) {
-            timeout = 1000 / 60;
-        }
         setTimeout(obj.specialEffect, timeout, obj);
     }
 }
 
+// 戰士職業類別
 function Warrior() {
     Player.call(this);
     this.x = 50
@@ -150,15 +151,16 @@ Warrior.prototype = Object.create(Player.prototype);
 
 Object.assign(Warrior.prototype, clone(new Draw));
 
+// 玩家技能
 Warrior.prototype.piercing = function () {
     let piercing = new Piercing(this.x, this.y, this.direction);
     piercing.specialEffect(piercing);
+    // 物件存入清單內管理
     skillObj.push(piercing);
 }
 
 function Piercing(x, y, direct) {
-    Player.call(this);
-    console.log(`Piercing(x, y, direct) = ${x}, ${y}, ${direct}`);
+    // 取得物件起始位置
     switch (direct) {
         case "right":
             this.x = x + 32;
@@ -177,16 +179,15 @@ function Piercing(x, y, direct) {
             this.y = y + 32;
             break;
     }
+    // 存活標記
+    this.isDelete = false;
     this.direction = direct;
-    this.dx = 0;
-    this.dy = 0;
     this.img = new Image();
+    // 載入對應方向的圖片
     this.img.src = "img/piercing_" + direct + ".png";
     this.health = 0;
     this.specialEffect(this);
 }
-
-Piercing.prototype = Object.create(Player.prototype);
 
 Object.assign(Piercing.prototype, clone(new Draw(0.5, 320, 240)));
 
@@ -199,8 +200,9 @@ bgImg.onload = function () {
     bgReady = true;
 }
 
-// 產生玩家物件
+// 蒐集技能物件
 let skillObj = [];
+// 產生玩家物件
 let player = new Warrior();
 
 // 儲存畫面更新的物件
@@ -212,6 +214,7 @@ function update() {
         ctx.drawImage(bgImg, 0, 0);
         player.draw();
         for (let o of skillObj) {
+            // 移除執行完成的物件
             if (o.isDelete) {
                 skillObj = skillObj.filter((item) => {
                     return item != o;
@@ -261,6 +264,7 @@ function userReset() {
     ctx.drawImage(bgImg, 0, 0);
 }
 
+// 技能按鍵延遲偵測
 function casting() {
 
     if (90 in keysdown) {
@@ -269,9 +273,6 @@ function casting() {
 
 
     mainReq.casting = setTimeout(casting, 1000 / 8);
-    return function () {
-        clearTimeout(this);
-    }
 }
 casting();
 
