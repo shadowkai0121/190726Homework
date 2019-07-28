@@ -151,6 +151,7 @@ Warrior.prototype = Object.create(Player.prototype);
 Object.assign(Warrior.prototype, clone(new Draw));
 
 Warrior.prototype.piercing = function () {
+    console.log(this.direction);
     if (skillObj.length > 0) {
         return;
     }
@@ -164,11 +165,19 @@ Warrior.prototype.piercing = function () {
 
 function Piercing(x, y, direct) {
     Player.call(this);
-    this.x = x + 16;
-    this.y = y - this.avatarImg.height / 2 + 16;
+    switch (direct) {
+        case "right":
+            this.x = x + 32;
+            this.y = y - this.avatarImg.height / 2 + 16;
+            break;
+        case "left":
+            this.x = x - 320;
+            this.y = y - this.avatarImg.height / 2 + 16;
+            break;
+    }
     this.direction = direct;
     this.img = new Image();
-    this.img.src = "img/piercing_right.png";
+    this.img.src = "img/piercing_" + direct + ".png";
     this.health = 0;
     this.specialEffect(this);
 }
@@ -189,8 +198,8 @@ bgImg.onload = function () {
 // 產生玩家物件
 let skillObj = [];
 let player = new Warrior();
-let piercing = new Piercing(100, 100, "right");
 
+// 儲存畫面更新的物件
 let mainReq = {};
 // 畫面更新
 function update() {
