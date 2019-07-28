@@ -140,7 +140,7 @@ Draw.prototype = {
 function Warrior() {
     Player.call(this);
     this.x = 50
-    this.y = canvas.height / 2;
+    this.y = canvas.height / 2 - 16;
     this.name = "Warrior";
     this.img = new Image();
     this.img.src = "img/warrior.png";
@@ -149,7 +149,7 @@ function Warrior() {
 
 Warrior.prototype = Object.create(Player.prototype);
 
-Object.assign(Warrior.prototype, clone(new Draw));
+Object.assign(Warrior.prototype, clone(new Draw()));
 
 // 玩家技能
 Warrior.prototype.piercing = function () {
@@ -191,6 +191,16 @@ function Piercing(x, y, direct) {
 
 Object.assign(Piercing.prototype, clone(new Draw(0.5, 320, 240)));
 
+function Brick() {
+    this.x = canvas.width / 2 - 16;
+    this.y = canvas.height / 2 - 16;
+    this.name = "Boss";
+    this.img = new Image();
+    this.img.src = "img/brick_boss.png";
+}
+
+Object.assign(Brick.prototype, clone(new Draw()));
+
 // 背景圖片
 let bgReady = false,
     bgImg = new Image();
@@ -204,6 +214,8 @@ bgImg.onload = function () {
 let skillObj = [];
 // 產生玩家物件
 let player = new Warrior();
+// 磚塊
+let brick = new Brick();
 
 // 儲存畫面更新的物件
 let mainReq = {};
@@ -213,6 +225,7 @@ function update() {
         reset()
         ctx.drawImage(bgImg, 0, 0);
         player.draw();
+        brick.show();
         for (let o of skillObj) {
             // 移除執行完成的物件
             if (o.isDelete) {
