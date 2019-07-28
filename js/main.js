@@ -165,18 +165,43 @@ function Piercing(x, y, direct) {
         case "right":
             this.x = x + 32;
             this.y = y - this.avatarImg.height * this.scale / 2 + 16;
+            // 作用範圍
+            this.scope = {
+                x: x + 32,
+                y: y,
+                width: 320,
+                height: 32
+            }
             break;
         case "left":
             this.x = x - this.avatarImg.width * this.scale;
             this.y = y - this.avatarImg.height * this.scale / 2 + 16;
+            this.scope = {
+                x: x,
+                y: y,
+                width: -320,
+                height: 32
+            }
             break;
         case "top":
             this.x = x - this.avatarImg.width * this.scale / 2 + 16;
             this.y = y - this.avatarImg.height * this.scale;
+            this.scope = {
+                x: x,
+                y: y,
+                width: 32,
+                height: -320
+            }
             break;
         case "bottom":
             this.x = x - this.avatarImg.width * this.scale / 2 + 16;
             this.y = y + 32;
+            this.scope = {
+                x: x,
+                y: y + 32,
+                width: 32,
+                height: 320
+            }
             break;
     }
     // 存活標記
