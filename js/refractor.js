@@ -47,24 +47,19 @@ function draw(obj) {
         // 人物在地圖的位置
         obj.x, obj.y,
         //     // 人物在地圖的大小
-        obj.avatarImg.width, obj.avatarImg.height);
+        obj.avatarImg.scale * obj.avatarImg.width, obj.avatarImg.scale * obj.avatarImg.height);
 }
 
 /*******************************************/
 // 物件
 
-// 方向表
-let direction = [
-    "right", "left", "top", "bottom",
-    "topRight", "topLeft", "bottomRight", "bottomLeft"
-];
-
-// 人物顯示規格
+// 人物圖片規格
 let avatarImg = {
+    scale: 1,
     x: 0,
     y: 0,
     width: 32,
-    height: 32
+    height: 32,
 }
 
 // 地圖物件類別
@@ -73,59 +68,93 @@ function MapObject() {
     this.y = Math.random() * canvas.height;
     this.dx = 4;
     this.dy = 4;
-    this.direction = direction[Math.random() * direction.length];
+    this.setDirection();
     this.isDelete = false;
     this.avatarImg = clone(avatarImg);
-    this.scale = 1;
 }
 
 MapObject.prototype = {
+    setDirection: function () {
+        let direction = [
+            "right", "left", "top", "bottom",
+            "topRight", "topLeft", "bottomRight", "bottomLeft"
+        ];
+
+        this.direction = direction[parseInt(Math.random() * direction.length)];
+    },
+    setScope: function () {
+        this.scope = {
+            minX: this.x,
+            minY: this.y,
+            maxX: this.x + this.avatarImg.scale * this.avatarImg.width,
+            maxY: this.y + this.avatarImg.scale * this.avatarImg.height
+        }
+    },
     move: function () {
+        // 每次移動時更新物件實體範圍
+        this.setScope();
+
         switch (this.direction) {
             case "right":
                 this.x += this.dx;
-                if (this.x >= canvas.width) {
-                    this.x = canvas.width;
-                }
                 break;
             case "left":
                 this.x -= this.dx;
-                if (this.x <= 0) {
-                    this.x = 0;
-                }
                 break;
             case "top":
                 this.y -= this.dy;
-                if (this.y <= 0) {
-                    this.y = 0;
-                }
                 break;
             case "bottom":
                 this.y += this.dy;
-                if (this.y >= canvas.height) {
-                    this.y = canvas.height;
-                }
                 break;
             case "topRight":
+                this.x += this.dx;
+                this.y += this.dy;
                 break;
             case "bottomRight":
+                this.x += this.dx;
+                this.y -= this.dy;
                 break;
             case "topLeft":
+                this.x -= this.dx;
+                this.y -= this.dy;
                 break;
             case "bottomLeft":
+                this.x -= this.dx;
+                this.y += this.dy;
                 break;
         }
+
+        if (this.x >= canvas.width - this.avatarImg.width) {
+            this.x = canvas.width - this.avatarImg.width;
+        }
+        if (this.x <= 0) {
+            this.x = 0;
+        }
+        if (this.y <= 0) {
+            this.y = 0;
+        }
+        if (this.y >= canvas.height - this.avatarImg.height) {
+            this.y = canvas.height - this.avatarImg.height;
+        }
+    },
+    randomWalk: function (obj) {
+        obj.setDirection();
+        setTimeout(obj.randomWalk, Math.random() * (1.5 * 1000), obj);
     }
 }
+
+
 
 function Warrior() {
     MapObject.call(this);
     this.x = 50;
-    this.y = canvas.height / 2 + this.avatarImg.width / 2;
+    this.y = canvas.height / 2 - this.avatarImg.width / 2;
     this.direction = "right";
     this.img = new Image();
     this.img.src = "img/warrior.png";
     this.actionCounter = 1;
+    this.setScope();
     this.action(this);
 }
 
@@ -165,8 +194,38 @@ Warrior.prototype.trunArround = function (direct) {
     }
 }
 
+
+
+function Brick() {
+    MapObject.call(this);
+    this.x = canvas.width / 2 - this.avatarImg.width / 2;
+    this.y = canvas.height / 2 - this.avatarImg.height / 2;
+    this.img = new Image();
+    this.img.src = "img/brick_boss.png";
+    this.setScope();
+    this.randomWalk(this);
+}
+
+Brick.prototype = Object.create(MapObject.prototype);
+
+Brick.prototype.move = function () {
+    MapObject.prototype.move.call(this);
+
+    if (
+        this.x >= canvas.width - this.avatarImg.width ||
+        this.y >= canvas.height - this.avatarImg.height ||
+        this.x <= 0 ||
+        this.y <= 0
+    ) {
+        this.setDirection();
+    }
+}
+
+
 // 玩家物件
 let player = new Warrior();
+// Boss
+let boss = new Brick();
 
 // 使用者功能
 let keysdown = [];
@@ -202,10 +261,12 @@ function main() {
         player.trunArround("bottom");
         player.move();
     }
+    boss.move();
 
     // 繪製物件
     drawBackGround();
     draw(player);
+    draw(boss);
 
     requestAnimationFrame(main);
 }
