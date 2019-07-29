@@ -40,6 +40,9 @@ function reset() {
 
 // 繪圖程式
 function draw(obj) {
+    if (obj instanceof Piercing) {
+    }
+
     ctx.drawImage(obj.img,
         // 人物擷取範圍
         obj.avatarImg.x, obj.avatarImg.y,
@@ -61,6 +64,8 @@ let avatarImg = {
     width: 32,
     height: 32,
 }
+
+
 
 // 地圖物件類別
 function MapObject() {
@@ -91,8 +96,6 @@ MapObject.prototype = {
         }
     },
     move: function () {
-        // 每次移動時更新物件實體範圍
-        this.setScope();
 
         switch (this.direction) {
             case "right":
@@ -137,6 +140,9 @@ MapObject.prototype = {
         if (this.y >= canvas.height - this.avatarImg.height) {
             this.y = canvas.height - this.avatarImg.height;
         }
+
+        // 每次移動時更新物件實體範圍
+        this.setScope();
     },
     randomWalk: function (obj) {
         obj.setDirection();
@@ -222,10 +228,85 @@ Brick.prototype.move = function () {
 }
 
 
+let piercingImg = {
+    scale: 0.5,
+    x: 0,
+    y: 0,
+    width: 320,
+    height: 240
+}
+
+function Piercing(caster) {
+
+    this.avatarImg = clone(piercingImg);
+
+    switch (caster.direction) {
+        case "right":
+            this.x = caster.x + caster.avatarImg.width;
+            this.y = caster.y - this.avatarImg.height * this.avatarImg.scale / 2 + caster.avatarImg.height / 2;
+            console.log(`this.y = ${caster.y} - ${this.avatarImg.height} * ${this.avatarImg.scale} / 2 + ${caster.avatarImg.height} / 2`);
+            // 作用範圍
+            this.scope = {
+                minX: caster.x + caster.avatarImg.width,
+                minY: caster.y,
+                maxX: this.x + this.avatarImg.width * this.avatarImg.scale,
+                maxY: caster.y + caster.avatarImg.height
+            }
+            break;
+        case "left":
+            this.x = caster.x - this.avatarImg.width * this.avatarImg.scale;
+            this.y = caster.y - this.avatarImg.height * this.avatarImg.scale / 2 + caster.avatarImg.height / 2;
+
+            this.scope = {
+                minX: caster.x - this.avatarImg.width * this.avatarImg.scale,
+                minY: caster.y,
+                maxX: caster.x,
+                maxY: caster.y + caster.avatarImg.height
+            }
+            break;
+        case "top":
+            this.x = caster.x - this.avatarImg.width * this.avatarImg.scale / 2 + caster.avatarImg.width / 2;
+            this.y = caster.y - this.avatarImg.height * this.avatarImg.scale;
+
+            this.scope = {
+                minX: caster.x,
+                minY: caster.y - this.avatarImg.height * this.avatarImg.scale,
+                maxX: caster.x + caster.avatarImg.width,
+                maxY: caster.y,
+            }
+            break;
+        case "bottom":
+            this.x = caster.x - this.avatarImg.width * this.avatarImg.scale / 2 + caster.avatarImg.width / 2;
+            this.y = caster.y + caster.avatarImg.height;
+
+            this.scope = {
+                minX: caster.x,
+                minY: caster.y + caster.avatarImg.height,
+                maxX: caster.x + caster.avatarImg.width,
+                maxY: this.minY + this.height * this.avatarImg.scale
+            }
+            break;
+    }
+
+    this.actionCounter = 0;
+    this.img = new Image();
+    // 載入對應方向的圖片
+    this.img.src = "img/piercing_" + caster.direction + ".png";
+    console.log(`piercing(x, y) = ${this.x}, ${this.y}`);
+}
+
+// 物件管理中心
+let enemyObj = [],
+    skillObj = [];
+
 // 玩家物件
 let player = new Warrior();
 // Boss
 let boss = new Brick();
+enemyObj.push(boss);
+
+let piercing = new Piercing(player);
+
 
 // 使用者功能
 let keysdown = [];
@@ -261,12 +342,13 @@ function main() {
         player.trunArround("bottom");
         player.move();
     }
-    boss.move();
+    // boss.move();
 
     // 繪製物件
     drawBackGround();
     draw(player);
     draw(boss);
+    draw(piercing);
 
     requestAnimationFrame(main);
 }
