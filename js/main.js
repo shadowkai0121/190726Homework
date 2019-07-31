@@ -624,13 +624,6 @@ document.onkeydown = function (e) {
         e.preventDefault();
     }
 
-    // 技能施放延遲
-    if (e.keyCode === 90) {
-        setInterval(() => {
-
-        },);
-    }
-
     keysdown[e.keyCode] = true;
 }
 
@@ -641,14 +634,24 @@ document.onkeyup = function (e) {
 // 遊戲迴圈
 function main() {
 
+    // 清除已刪除物件
+    skillObjs = skillObjs.filter(obj => {
+        return obj.isDelete != true;
+    });
+
+    // boss 亂動
+    boss.move();
+
     // 判斷按下的按鍵
     if (37 in keysdown) {
         player.setDirection("left");
         player.move();
+        draw(player);
     }
     if (38 in keysdown) {
         player.setDirection("top");
         player.move();
+        draw(player);
     }
     if (39 in keysdown) {
         player.setDirection("right");
@@ -658,19 +661,12 @@ function main() {
     if (40 in keysdown) {
         player.setDirection("bottom");
         player.move();
+        draw(player);
     }
     // 按下 Z 鍵發出攻擊
     if (90 in keysdown) {
         player.piercing();
     }
-
-    // boss 亂動
-    boss.move();
-
-    // 清除已刪除物件
-    skillObjs = skillObjs.filter(obj => {
-        return obj.isDelete != true;
-    });
 
     // 繪製物件
     drawBackGround();
