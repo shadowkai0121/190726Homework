@@ -216,7 +216,9 @@ Warrior.prototype.setDirection = function (direct) {
 
 Warrior.prototype.piercing = function () {
     let piercing = new Piercing(this);
-    piercing.isHit();
+    for (let obj of enemyObjs) {
+        piercing.isHit(obj);
+    }
     skillObjs.push(piercing);
 }
 
@@ -335,11 +337,10 @@ Piercing.prototype.action = function (obj) {
         return;
     }
 
-    setTimeout(obj.action, 1000 / 120, obj);
+    setTimeout(obj.action, 1000 / 60, obj);
 }
 
 Piercing.prototype.isHit = function (enemyObj) {
-    // 命中後回傳交叉點數據
     switch (this.direction) {
         case "right":
             /*                                 
@@ -362,8 +363,6 @@ Piercing.prototype.isHit = function (enemyObj) {
                 this.scope.maxY >= enemyObj.scope.minY
             ) {
                 console.log("right hit");
-
-                
             }
             break;
         case "left":
@@ -407,8 +406,8 @@ Piercing.prototype.isHit = function (enemyObj) {
                     skill.minX     skill.maxX
             */
             if (
-                this.scope.minY <= enemyObj.scope.minY &&
-                this.scope.maxY >= enemyObj.scale.minY &&
+                this.scope.minY <= enemyObj.scope.maxY &&
+                this.scope.maxY >= enemyObj.scope.minY &&
                 this.scope.minX <= enemyObj.scope.maxX ||
                 this.scope.maxX >= enemyObj.scope.minX
             ) {
