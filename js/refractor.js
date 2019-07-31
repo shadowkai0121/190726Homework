@@ -263,6 +263,7 @@ function Piercing(caster) {
 
     this.avatarImg = clone(attachSkillImg);
 
+    // 依照攻擊方向設置技能物件起始位置
     switch (caster.direction) {
         case "right":
             // 校正初始位置使技能效果能從人物中線發射
@@ -362,7 +363,9 @@ Piercing.prototype.isHit = function (enemyObj) {
                 this.scope.minY <= enemyObj.scope.maxY ||
                 this.scope.maxY >= enemyObj.scope.minY
             ) {
-                console.log("right hit");
+                // console.log(`skill(minY, maxY) = ${this.scope.minY}, ${this.scope.maxY}`);
+                // console.log(`enemy(minY, maxY) = ${enemyObj.scope.minY}, ${enemyObj.scope.maxY}`);
+                // console.log(getCenterLine(this, enemyObj));
             }
             break;
         case "left":
@@ -446,15 +449,40 @@ Piercing.prototype.isHit = function (enemyObj) {
     }
 }
 
-function Explosion(skill, victim) {
-    // 攻擊方向
-    // Explosion(x, y) = 計算重疊範圍的中線與目標的邊界
+// 取得重疊範圍的中心線
+// 以技能的方向為基準
+function getCenterLine(skill, target) {
+
+    if (skill.direction === "right" || skill.direction === "left") {
+
+        let horizontal = skill.scope.minY >= target.scope.maxY ?
+            (skill.scope.minY + target.scope.maxY) / 2 :
+            (skill.scope.maxY + target.scope.minY) / 2;
+
+        return horizontal;
+    }
+
+    else if (skill.direction === "top" || skill.direction === "bottom") {
+
+        let vertical = skill.scope.minX <= target.scope.maxX ?
+            (skill.scope.minX + target.scope.maxX) / 2 :
+            (skill.scope.maxX + target.scope.minX) / 2;
+
+        return vertical;
+    }
+
+    throw "技能方向指定錯誤";
 
 }
 
-function countCrossPoint(obj1, obj2) {
+function Explosion(x, y) {
+    // Explosion(x, y) = 重疊範圍的中線與目標的邊界
+
+
 
 }
+
+
 
 // 物件管理中心
 let enemyObjs = [],
