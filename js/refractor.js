@@ -338,112 +338,123 @@ Piercing.prototype.action = function (obj) {
     setTimeout(obj.action, 1000 / 120, obj);
 }
 
-Piercing.prototype.isHit = function () {
-    for (let enemyObj of enemyObjs) {
-        switch (this.direction) {
-            case "right":
-                /*                                 
-                    enemy.minX  enemy.maxX      
-                        |          |                
-                        +----------+ enemy.minY    
-                        |   enemy  |               
-                        |          |            skill.maxX
+Piercing.prototype.isHit = function (enemyObj) {
+    // 命中後回傳交叉點數據
+    switch (this.direction) {
+        case "right":
+            /*                                 
+                enemy.minX  enemy.maxX      
+                    |          |                
+                    +----------+ enemy.minY    
+                    |   enemy  |               
+                    |          |            skill.maxX
+                +------------------------------+ skill.minY
+                |   |          |               |
+                |   +----------+ enemy.maxY    |
+                |                              |
+                +------------------------------+ skill.maxY
+                            +---------------------->
+            */
+            if (
+                this.scope.maxX >= enemyObj.scope.minX &&
+                this.scope.minX <= enemyObj.scope.minX &&
+                this.scope.minY <= enemyObj.scope.maxY ||
+                this.scope.maxY >= enemyObj.scope.minY
+            ) {
+                console.log("right hit");
+
+                
+            }
+            break;
+        case "left":
+            /*
+                                enemy.minX   enemy.maxX
+                                   +----------+  skill.maxX
+                                   |          |    +
+              skill.minX           |          |    |
                     +------------------------------+ skill.minY
-                    |   |          |               |
-                    |   +----------+ enemy.maxY    |
+                    |              |          |    |
+                    |   enemy.maxY +----------+    |
                     |                              |
                     +------------------------------+ skill.maxY
-                                +---------------------->
-                */
-                if (
-                    this.scope.maxX >= enemyObj.scope.minX &&
-                    this.scope.minX <= enemyObj.scope.minX &&
-                    this.scope.minY <= enemyObj.scope.maxY ||
-                    this.scope.maxY >= enemyObj.scope.minY
-                ) {
-                    console.log("right hit");
-                }
-                break;
-            case "left":
-                /*
-                                    enemy.minX   enemy.maxX
-                                       +----------+  skill.maxX
-                                       |          |    +
-                  skill.minX           |          |    |
-                        +------------------------------+ skill.minY
-                        |              |          |    |
-                        |   enemy.maxY +----------+    |
-                        |                              |
-                        +------------------------------+ skill.maxY
-                    <-------------------+
+                <-------------------+
 
-                 */
-                if (this.scope.minX <= enemyObj.scope.minX &&
-                    this.scope.maxX >= enemyObj.scope.maxX &&
-                    this.scope.minY >= enemyObj.scope.maxY ||
-                    this.scope.maxY >= enemyObj.scope.minY) {
-                    console.log("left hit");
-                }
-                break;
-            case "top":
-                /*
-                                              ^
-                                              |
-                      skill.minY+-----------+ |
-                                |           | |
-                                |           | |
-                enemy.minY+---------+       | +
-                          |     |   |       |
-                          |     |   |       |
-                          |     |   |       |
-                          |     |   |       |
-                enemy.maxY+---------+       |
-                    enemy.minX  | enemy.maxX|
-                                |           |
-                                |           |
-                                +-----------+ skill.maxY
-                        skill.minX     skill.maxX
-                */
-                if (
-                    this.scope.minY <= enemyObj.scope.minY &&
-                    this.scope.maxY >= enemyObj.scale.minY &&
-                    this.scope.minX <= enemyObj.scope.maxX ||
-                    this.scope.maxX >= enemyObj.scope.minX
-                ) {
-                    console.log("top hit");
-                }
-                break;
-            case "bottom":
-                /*
-                    skill.minX  skill.maxX
-                          +---------+ skill.minY
-                          |         |
-                          |         |
-         enemy.minY +----------+    |
-                    |     |    |    |
-                    |     |    |    |  +
-                    |     |    |    |  |
-                    |     |    |    |  |
-         enemy.maxY +----------+    |  |
-             enemy.minX   |    |    |  |
-                          |    |    |  |
-                          |    |    |  |
-               skill.maxY +---------+  |
-                               |       |
-                               +       v
-                        enemy.maxX
-                */
-                if (
-                    this.scope.maxY >= enemyObj.scope.maxY &&
-                    this.scope.minY <= enemyObj.scope.maxY &&
-                    this.scope.minX <= enemyObj.scope.maxX ||
-                    this.scope.maxX >= enemyObj.scope.minX
-                ) {
-                    console.log("bottom hit");
-                }
-                break;
-        }
+             */
+            if (this.scope.minX <= enemyObj.scope.minX &&
+                this.scope.maxX >= enemyObj.scope.maxX &&
+                this.scope.minY >= enemyObj.scope.maxY ||
+                this.scope.maxY >= enemyObj.scope.minY) {
+                console.log("left hit");
+            }
+            break;
+        case "top":
+            /*
+                                          ^
+                                          |
+                  skill.minY+-----------+ |
+                            |           | |
+                            |           | |
+            enemy.minY+---------+       | +
+                      |     |   |       |
+                      |     |   |       |
+                      |     |   |       |
+                      |     |   |       |
+            enemy.maxY+---------+       |
+                enemy.minX  | enemy.maxX|
+                            |           |
+                            |           |
+                            +-----------+ skill.maxY
+                    skill.minX     skill.maxX
+            */
+            if (
+                this.scope.minY <= enemyObj.scope.minY &&
+                this.scope.maxY >= enemyObj.scale.minY &&
+                this.scope.minX <= enemyObj.scope.maxX ||
+                this.scope.maxX >= enemyObj.scope.minX
+            ) {
+                console.log("top hit");
+            }
+            break;
+        case "bottom":
+            /*
+                skill.minX  skill.maxX
+                      +---------+ skill.minY
+                      |         |
+                      |         |
+     enemy.minY +----------+    |
+                |     |    |    |
+                |     |    |    |  +
+                |     |    |    |  |
+                |     |    |    |  |
+     enemy.maxY +----------+    |  |
+         enemy.minX   |    |    |  |
+                      |    |    |  |
+                      |    |    |  |
+           skill.maxY +---------+  |
+                           |       |
+                           +       v
+                    enemy.maxX
+            */
+            if (
+                this.scope.maxY >= enemyObj.scope.maxY &&
+                this.scope.minY <= enemyObj.scope.maxY &&
+                this.scope.minX <= enemyObj.scope.maxX ||
+                this.scope.maxX >= enemyObj.scope.minX
+            ) {
+                console.log("bottom hit");
+            }
+            break;
     }
+}
+
+function Explosion(skill, victim) {
+    // 攻擊方向
+    // Explosion(x, y) = 計算重疊範圍的中線與目標的邊界
+
+}
+
+function countCrossPoint(obj1, obj2) {
+
 }
 
 // 物件管理中心
@@ -459,9 +470,11 @@ enemyObjs.push(boss);
 // 紀錄按鍵資訊 
 let keysdown = [];
 document.onkeydown = function (e) {
+    // 移除上下左右鍵預設的動作
     if ([37, 38, 39, 40].includes(e.keyCode)) {
         e.preventDefault();
     }
+
     keysdown[e.keyCode] = true;
 }
 
